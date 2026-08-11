@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.py[cod]
+
+# Python virtual environment
+.venv/
+venv/
+
+# Environment variables
+.env
+.env.*
+
+# Local application data
+data/*
+!data/.gitkeep
+
+# Generated files
+dist/
+build/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+
+# Audio / ebook files
+*.mp3
+*.m4a
+*.wav
+*.flac
+*.ogg
+*.pdf
+*.epub
