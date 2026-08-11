@@ -1,14 +1,26 @@
+import AudioPlayer from "./components/AudioPlayer";
+import BookReader from "./components/BookReader";
+import Header from "./components/Header";
+
 function App() {
   return (
-    <div>
-      <h1>Audiobook Reader</h1>
+    <div className="app">
+      <Header />
 
-      <p>
-        Listen to your audiobook while reading the corresponding book.
-      </p>
-
-      <button>Open Book</button>
+      <main className="main-content">
+        <BookReader />
+        <AudioPlayer />
+      </main>
     </div>
+    // <div>
+    //   <h1>Audiobook Reader</h1>
+
+    //   <p>
+    //     Listen to your audiobook while reading the corresponding book.
+    //   </p>
+
+    //   <button>Open Book</button>
+    // </div>
   );
 }
 

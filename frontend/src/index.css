@@ -1,4 +1,4 @@
-:root {
+/* :root {
   --text: #6b6375;
   --text-h: #08060d;
   --bg: #fff;
@@ -93,19 +93,190 @@ h2 {
 }
 p {
   margin: 0;
+} */
+
+:root {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  color: #e5e7eb;
+  background: #111827;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+* {
+  box-sizing: border-box;
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+.app {
+  min-height: 100vh;
+}
+
+.app-header {
+  height: 64px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #374151;
+  background: #111827;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.app-header button {
+  padding: 8px 14px;
+  border: 1px solid #4b5563;
+  border-radius: 6px;
+  color: #e5e7eb;
+  background: #1f2937;
+}
+
+.main-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr);
+  min-height: calc(100vh - 64px);
+}
+
+.book-reader,
+.audio-player {
+  padding: 32px;
+}
+
+.book-reader {
+  border-right: 1px solid #374151;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.section-header span {
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.book-content {
+  max-width: 720px;
+  margin: 0 auto;
+  line-height: 1.8;
+}
+
+.book-content h3 {
+  margin-top: 0;
+  margin-bottom: 32px;
+  font-size: 28px;
+}
+
+.book-content p {
+  margin-bottom: 24px;
+  color: #d1d5db;
+  font-size: 18px;
+}
+
+.audio-player {
+  display: flex;
+  flex-direction: column;
+}
+
+.audio-info {
+  margin-bottom: 48px;
+}
+
+.audio-info h3 {
+  margin-bottom: 8px;
+  font-size: 24px;
+}
+
+.audio-info p {
+  margin: 0;
+  color: #9ca3af;
+}
+
+.progress-container {
+  margin-bottom: 32px;
+}
+
+.progress-bar {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #374151;
+}
+
+.progress {
+  width: 30%;
+  height: 100%;
+  border-radius: inherit;
+  background: #60a5fa;
+}
+
+.time {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+.playback-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.playback-controls button {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  color: #e5e7eb;
+  background: #374151;
+}
+
+.playback-controls .play-button {
+  width: 56px;
+  height: 56px;
+  color: #111827;
+  background: #f3f4f6;
+  font-size: 18px;
+}
+
+.playback-speed {
+  margin-top: 32px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+@media (max-width: 800px) {
+  .main-content {
+    grid-template-columns: 1fr;
+  }
+
+  .book-reader {
+    border-right: 0;
+    border-bottom: 1px solid #374151;
+  }
 }
