@@ -27,6 +27,13 @@ Thumbs.db
 # IDE
 .vscode/
 
+data/audio/
+*.m4b
+
+data/books/
+*.epub
+*.pdf
+
 # Audio / ebook files
 *.mp3
 *.m4a
