@@ -7,6 +7,8 @@ import {
   type EpubParagraph,
 } from "./parse-epub-chapter.js";
 
+import { findBook } from "./services/book.service.js";
+
 export interface ReaderChapter {
   number: number;
   title: string;
@@ -14,44 +16,73 @@ export interface ReaderChapter {
 
   audio: {
     part: number;
-    audioFile: string;
+    url: string;
     startTime: number;
     endTime: number;
   } | null;
 }
 
-const epubFile =
-  "/home/abhishek_s/projects/audiobook-reader/data/books/01-The-Eye-of-the-World-by-Robert-Jordan.epub";
-
-const chaptersFile = "../data/chapters.json";
+// const chaptersFile = "../data/chapters.json";
 
 export async function loadReaderChapter(
+  bookId: string,
   chapterNumber: number
 ): Promise<ReaderChapter> {
-  const chaptersJson = await readFile(chaptersFile, "utf-8");
+
+  // 1. Find the requested book
+  const book = findBook(bookId);
+
+  // 2. Load the combined chapter metadata
+  const chaptersJson = await readFile(
+    book.chaptersFile,
+    "utf-8"
+  );
 
   const chapters: CombinedChapters =
     JSON.parse(chaptersJson);
 
+  // 3. Find the requested chapter
   const chapter = chapters.find(
-    (chapter) => chapter.number === chapterNumber
+    (chapter) =>
+      chapter.number === chapterNumber
   );
 
   if (!chapter) {
-    throw new Error(`Chapter ${chapterNumber} not found`);
+    throw new Error(
+      `Chapter ${chapterNumber} not found`
+    );
   }
 
-  const html = await getEpubChapterContent(
-    epubFile,
-    chapter.epub.href
-  );
+  // 4. Read the EPUB chapter from the book
+  const html =
+    await getEpubChapterContent(
+      book.epubFile,
+      chapter.epub.href
+    );
 
-  const content = parseEpubChapter(html);
+  const content =
+    parseEpubChapter(html);
 
+  // 5. Build the frontend-safe audio response
   return {
     number: chapter.number,
     title: content.title,
     paragraphs: content.paragraphs,
-    audio: chapter.audio,
+
+    audio: chapter.audio
+      ? {
+          part: chapter.audio.part,
+
+          url:
+            `/audio/${book.id}/part/` +
+            `${chapter.audio.part}`,
+
+          startTime:
+            chapter.audio.startTime,
+
+          endTime:
+            chapter.audio.endTime,
+        }
+      : null,
   };
 }
