@@ -3,7 +3,36 @@ import type {
   FastifyReply,
 } from "fastify";
 
-import { getChapter } from "../services/chapter.service.js";
+import {
+  getChapter,
+  listChapters,
+} from "../services/chapter.service.js";
+
+export async function listChaptersController(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const { bookId } =
+    request.params as {
+      bookId: string;
+    };
+
+  try {
+    const chapters =
+      await listChapters(bookId);
+
+    return reply.send(chapters);
+  } catch (error) {
+    return reply
+      .code(404)
+      .send({
+        error:
+          error instanceof Error
+            ? error.message
+            : "Book not found",
+      });
+  }
+}
 
 export async function getChapterController(
   request: FastifyRequest,
@@ -40,9 +69,7 @@ export async function getChapterController(
       );
 
     return reply.send(chapter);
-
   } catch (error) {
-
     return reply
       .code(404)
       .send({

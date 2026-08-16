@@ -1,12 +1,19 @@
 import {
   getBook,
   getBooks,
-  type BookConfig,
 } from "../registry/book-registry.js";
 
-export function findBook(
+export function listBooks() {
+  return getBooks().map((book) => ({
+    id: book.id,
+    title: book.title,
+    author: book.author,
+  }));
+}
+
+export function getBookDetails(
   bookId: string
-): BookConfig {
+) {
   const book = getBook(bookId);
 
   if (!book) {
@@ -15,9 +22,9 @@ export function findBook(
     );
   }
 
-  return book;
-}
-
-export function listBooks(): BookConfig[] {
-  return getBooks();
+  return {
+    id: book.id,
+    title: book.title,
+    author: book.author,
+  };
 }

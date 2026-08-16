@@ -1,27 +1,30 @@
-function BookReader() {
+import type { Chapter } from "../api/chapters";
+
+interface BookReaderProps {
+  chapter: Chapter;
+  activeParagraphId: string | null;
+}
+
+function BookReader({ chapter, activeParagraphId }: BookReaderProps) {
+  // console.log("BookReader activeParagraphId:", activeParagraphId);
   return (
     <section className="book-reader">
       <div className="section-header">
         <h2>Book</h2>
-        <span>Chapter 1</span>
+        <span>{chapter.title}</span>
       </div>
 
       <article className="book-content">
-        <h3>The Beginning</h3>
-
-        <p>
-          The morning was quiet, and the first light of the sun
-          slowly appeared above the horizon.
-        </p>
-
-        <p>
-          The streets were still empty as the city began to wake.
-        </p>
-
-        <p>
-          Somewhere in the distance, a clock announced the beginning
-          of another day.
-        </p>
+        {chapter.paragraphs.map((paragraph) => (
+          <p
+            key={paragraph.id}
+            className={
+              paragraph.id === activeParagraphId ? "active-paragraph" : ""
+            }
+          >
+            {paragraph.text}
+          </p>
+        ))}
       </article>
     </section>
   );

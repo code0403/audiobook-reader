@@ -1,51 +1,91 @@
-import { useState } from "react";
-import useAudioPlayer from "../hooks/useAudioPlayer";
+import { useEffect, useRef, useState } from "react";
 
-function AudioPlayer() {
-  const [audioFile, setAudioFile] = useState<File | null>(null);
+import { AudioPlayer as AudioPlayerEngine } from "../audio/AudioPlayer";
+import type { Chapter } from "../api/chapters";
+import { getAudioUrl } from "../api/audio";
 
-  const {
-    audioRef,
-    audioUrl,
-    isPlaying,
-    currentTime,
-    duration,
-    playbackRate,
+interface AudioPlayerProps {
+  bookId: string;
+  chapter: Chapter;
+  onTimeUpdate?: (currentTime: number) => void;
+}
 
-    togglePlay,
-    handleSeek,
-    skipBackward,
-    skipForward,
-    changePlaybackRate,
+function AudioPlayer({ bookId, chapter, onTimeUpdate }: AudioPlayerProps) {
+  const playerRef = useRef<AudioPlayerEngine | null>(null);
 
-    handleLoadedMetadata,
-    handleTimeUpdate,
-    handleEnded,
-  } = useAudioPlayer(audioFile);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-  function handleFileSelect(
-    event: React.ChangeEvent<HTMLInputElement>
-  ) {
-    const file = event.target.files?.[0];
+  const [currentTime, setCurrentTime] = useState(0);
 
-    if (!file) {
+  useEffect(() => {
+    if (!chapter.audio) {
       return;
     }
 
-    setAudioFile(file);
+    const player = new AudioPlayerEngine();
+
+    const audioUrl = getAudioUrl(bookId, chapter.audio.part);
+
+    player.loadChapter({
+      audioUrl,
+      startTime: chapter.audio.startTime,
+      endTime: chapter.audio.endTime,
+    });
+
+    playerRef.current = player;
+
+    const unsubscribeTimeUpdate = player.onTimeUpdate((time) => {
+      // console.log("AudioPlayer time:", time);
+      setCurrentTime(time);
+      onTimeUpdate?.(time);
+    });
+
+    const unsubscribeEnded = player.onEnded(() => {
+      setIsPlaying(false);
+    });
+
+    return () => {
+      unsubscribeTimeUpdate();
+      unsubscribeEnded();
+
+      player.pause();
+    };
+  }, [bookId, chapter]);
+
+  if (!chapter.audio) {
+    return <p>No audio available for this chapter.</p>;
   }
 
-  function formatTime(time: number) {
-    if (!Number.isFinite(time)) {
-      return "00:00";
+  const chapterDuration = chapter.audio.endTime - chapter.audio.startTime;
+
+  async function handlePlay() {
+    if (!playerRef.current) {
+      return;
     }
 
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
+    try {
+      await playerRef.current.play();
 
-    return `${String(minutes).padStart(2, "0")}:${String(
-      seconds
-    ).padStart(2, "0")}`;
+      setIsPlaying(true);
+    } catch (error) {
+      console.error("Audio playback failed:", error);
+
+      setIsPlaying(false);
+    }
+  }
+
+  function handlePause() {
+    playerRef.current?.pause();
+
+    setIsPlaying(false);
+  }
+
+  function handleSeek(event: React.ChangeEvent<HTMLInputElement>) {
+    const time = Number(event.target.value);
+
+    playerRef.current?.seek(time);
+
+    setCurrentTime(time);
   }
 
   return (
@@ -54,96 +94,71 @@ function AudioPlayer() {
         <h2>Audiobook</h2>
       </div>
 
+      <div className="audio-info">
+        <h3>{chapter.title}</h3>
+      </div>
+
       <input
-        type="file"
-        accept="audio/*"
-        onChange={handleFileSelect}
+        type="range"
+        min={0}
+        max={chapterDuration}
+        step={0.1}
+        value={Math.min(currentTime, chapterDuration)}
+        onChange={handleSeek}
+        aria-label="Audio progress"
       />
 
-      {audioFile && (
-        <div className="audio-info">
-          <h3>{audioFile.name}</h3>
-        </div>
-      )}
+      <div className="time">
+        <span>{formatTime(currentTime)}</span>
 
-      {audioUrl && (
-        <>
-          <audio
-            ref={audioRef}
-            src={audioUrl}
-            onLoadedMetadata={handleLoadedMetadata}
-            onTimeUpdate={handleTimeUpdate}
-            onEnded={handleEnded}
-          />
+        <span>{formatTime(chapterDuration)}</span>
+      </div>
 
-          <input
-            type="range"
-            min="0"
-            max={duration || 0}
-            step="0.1"
-            value={currentTime}
-            onChange={(event) =>
-              handleSeek(Number(event.target.value))
-            }
-            aria-label="Audio progress"
-          />
+      <div className="playback-controls">
+        <button
+          type="button"
+          onClick={() => playerRef.current?.seek(Math.max(0, currentTime - 10))}
+          aria-label="Skip backward 10 seconds"
+        >
+          ↶
+        </button>
 
-          <div className="time">
-            <span>{formatTime(currentTime)}</span>
-            <span>{formatTime(duration)}</span>
-          </div>
+        <button
+          type="button"
+          className="play-button"
+          onClick={isPlaying ? handlePause : handlePlay}
+          aria-label={isPlaying ? "Pause" : "Play"}
+        >
+          {isPlaying ? "⏸" : "▶"}
+        </button>
 
-          <div className="playback-controls">
-            <button
-              type="button"
-              aria-label="Skip backward 10 seconds"
-              onClick={skipBackward}
-            >
-              ↶
-            </button>
-
-            <button
-              type="button"
-              className="play-button"
-              aria-label={isPlaying ? "Pause" : "Play"}
-              onClick={togglePlay}
-            >
-              {isPlaying ? "⏸" : "▶"}
-            </button>
-
-            <button
-              type="button"
-              aria-label="Skip forward 10 seconds"
-              onClick={skipForward}
-            >
-              ↷
-            </button>
-          </div>
-
-          <div className="playback-speed">
-            <label htmlFor="playback-speed">
-              Speed:
-            </label>
-
-            <select
-              id="playback-speed"
-              value={playbackRate}
-              onChange={(event) =>
-                changePlaybackRate(Number(event.target.value))
-              }
-            >
-              <option value="0.75">0.75x</option>
-              <option value="1">1.0x</option>
-              <option value="1.25">1.25x</option>
-              <option value="1.5">1.5x</option>
-              <option value="1.75">1.75x</option>
-              <option value="2">2.0x</option>
-            </select>
-          </div>
-        </>
-      )}
+        <button
+          type="button"
+          onClick={() =>
+            playerRef.current?.seek(Math.min(chapterDuration, currentTime + 10))
+          }
+          aria-label="Skip forward 10 seconds"
+        >
+          ↷
+        </button>
+      </div>
     </section>
   );
+}
+
+function formatTime(time: number) {
+  if (!Number.isFinite(time)) {
+    return "00:00";
+  }
+
+  const minutes = Math.floor(time / 60);
+
+  const seconds = Math.floor(time % 60);
+
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
+    2,
+    "0",
+  )}`;
 }
 
 export default AudioPlayer;
