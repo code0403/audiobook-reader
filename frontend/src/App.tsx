@@ -8,27 +8,30 @@ import type { Book } from "./api/books";
 import { getChapter, type Chapter, type ChapterSummary } from "./api/chapters";
 import AudioPlayer from "./components/AudioPlayer";
 
-import {
-  getActiveParagraph,
-  type SyncedParagraph,
-} from "./sync/paragraph-sync";
+// import {
+//   getActiveParagraph,
+//   type SyncedParagraph,
+// } from "./sync/paragraph-sync";
+import { getChapterAlignment, type ChapterAlignment } from "./api/alignment";
+
+import { getActiveWord } from "./sync/alignment";
 import BookReader from "./components/BookReader";
 
-function createTestTimings(
-  paragraphs: Chapter["paragraphs"],
-  duration: number,
-): SyncedParagraph[] {
-  const paragraphDuration = duration / paragraphs.length;
+// function createTestTimings(
+//   paragraphs: Chapter["paragraphs"],
+//   duration: number,
+// ): SyncedParagraph[] {
+//   const paragraphDuration = duration / paragraphs.length;
 
-  return paragraphs.map((paragraph, index) => ({
-    id: paragraph.id,
-    text: paragraph.text,
+//   return paragraphs.map((paragraph, index) => ({
+//     id: paragraph.id,
+//     text: paragraph.text,
 
-    startTime: index * paragraphDuration,
+//     startTime: index * paragraphDuration,
 
-    endTime: (index + 1) * paragraphDuration,
-  }));
-}
+//     endTime: (index + 1) * paragraphDuration,
+//   }));
+// }
 
 function App() {
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
@@ -40,6 +43,10 @@ function App() {
   const [chapter, setChapter] = useState<Chapter | null>(null);
   const [chapterLoading, setChapterLoading] = useState(false);
   const [chapterError, setChapterError] = useState<string | null>(null);
+
+  const [alignment, setAlignment] = useState<ChapterAlignment | null>(null);
+  const [alignmentLoading, setAlignmentLoading] = useState(false);
+  const [alignmentError, setAlignmentError] = useState<string | null>(null);
 
   const [activeParagraphId, setActiveParagraphId] = useState<string | null>(
     null,
@@ -57,14 +64,25 @@ function App() {
 
     setSelectedChapter(chapterSummary);
     setChapter(null);
+    setAlignment(null);
     setChapterError(null);
+    setAlignmentError(null);
     setActiveParagraphId(null);
     setChapterLoading(true);
 
     try {
-      const data = await getChapter(selectedBook.id, chapterSummary.number);
+      // const data = await getChapter(selectedBook.id, chapterSummary.number);
 
-      setChapter(data);
+      const [chapterData, alignmentData] = await Promise.all([
+        getChapter(selectedBook.id, chapterSummary.number),
+
+        getChapterAlignment(selectedBook.id, chapterSummary.number),
+      ]);
+
+      setChapter(chapterData);
+      setAlignment(alignmentData);
+
+      // setChapter(data);
     } catch (error) {
       setChapterError(
         error instanceof Error ? error.message : "Failed to load chapter",
@@ -101,39 +119,50 @@ function App() {
                   <AudioPlayer
                     bookId={selectedBook.id}
                     chapter={chapter}
+                    // onTimeUpdate={(currentTime) => {
+
+                    //   const duration = chapter.audio
+                    //     ? chapter.audio.endTime - chapter.audio.startTime
+                    //     : 0;
+
+                    //   if (!duration) {
+                    //     setActiveParagraphId(null);
+                    //     return;
+                    //   }
+
+                    //   const syncedParagraphs = createTestTimings(
+                    //     chapter.paragraphs,
+                    //     duration,
+                    //   );
+
+                    //   const activeParagraph = getActiveParagraph(
+                    //     syncedParagraphs,
+                    //     currentTime,
+                    //   );
+
+                    //   setActiveParagraphId(activeParagraph?.id ?? null);
+                    // }}
                     onTimeUpdate={(currentTime) => {
-                      // console.log("App received time:", currentTime);
-
-                      const duration = chapter.audio
-                        ? chapter.audio.endTime - chapter.audio.startTime
-                        : 0;
-
-                      if (!duration) {
+                      if (!alignment) {
                         setActiveParagraphId(null);
                         return;
                       }
-
-                      const syncedParagraphs = createTestTimings(
-                        chapter.paragraphs,
-                        duration,
-                      );
-
-                      const activeParagraph = getActiveParagraph(
-                        syncedParagraphs,
+                      
+                      const activeWord = getActiveWord(
+                        alignment.words,
                         currentTime,
                       );
-
-                      // console.log(
-                      //   "Active paragraph:", 
-                      //   activeParagraph?.id, 
-                      //   activeParagraph?.text.slice(0, 50),
-                      // );
-
-                      setActiveParagraphId(activeParagraph?.id ?? null);
+                      
+                      setActiveParagraphId(
+                        activeWord?.paragraphId ?? null,
+                      );
                     }}
                   />
 
-                  <BookReader chapter={chapter} activeParagraphId={activeParagraphId} />
+                  <BookReader
+                    chapter={chapter}
+                    activeParagraphId={activeParagraphId}
+                  />
                 </>
               )}
             </section>

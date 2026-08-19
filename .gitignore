@@ -42,3 +42,5 @@ data/books/
 *.ogg
 *.pdf
 *.epub
+
+.venv-alignment

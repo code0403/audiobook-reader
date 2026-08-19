@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import {
   loadReaderChapter,
   type ReaderChapter,
@@ -28,4 +29,17 @@ export async function listChapters(
     title: chapter.title,
     hasAudio: chapter.audio !== null,
   }));
+}
+
+
+export async function getChapterAlignment(
+  chapterNumber: number
+) {
+  const alignmentFile =
+    `../data/alignment/chapter-${chapterNumber}/aligned.json`;
+
+  const alignmentJson =
+    await readFile(alignmentFile, "utf-8");
+
+  return JSON.parse(alignmentJson);
 }

@@ -3,6 +3,7 @@ import type { FastifyInstance } from "fastify";
 import {
   listChaptersController,
   getChapterController,
+ getChapterAlignmentController,
 } from "../controllers/chapter.controller.js";
 
 export async function registerChapterRoutes(
@@ -16,5 +17,10 @@ export async function registerChapterRoutes(
   app.get(
     "/api/books/:bookId/chapters/:chapterNumber",
     getChapterController
+  );
+
+  app.get(
+    "/api/books/:bookId/chapters/:chapterNumber/alignment",
+   getChapterAlignmentController
   );
 }

@@ -6,6 +6,7 @@ import type {
 import {
   getChapter,
   listChapters,
+  getChapterAlignment,
 } from "../services/chapter.service.js";
 
 export async function listChaptersController(
@@ -77,6 +78,51 @@ export async function getChapterController(
           error instanceof Error
             ? error.message
             : "Chapter not found",
+      });
+  }
+}
+
+
+export async function getChapterAlignmentController(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const {
+    bookId,
+    chapterNumber,
+  } =
+    request.params as {
+      bookId: string;
+      chapterNumber: string;
+    };
+
+  const number =
+    Number(chapterNumber);
+
+  if (
+    !Number.isInteger(number) ||
+    number < 0
+  ) {
+    return reply
+      .code(400)
+      .send({
+        error: "Invalid chapter number",
+      });
+  }
+
+  try {
+    const alignment =
+      await getChapterAlignment(number);
+
+    return reply.send(alignment);
+  } catch (error) {
+    return reply
+      .code(404)
+      .send({
+        error:
+          error instanceof Error
+            ? error.message
+            : "Alignment not found",
       });
   }
 }
